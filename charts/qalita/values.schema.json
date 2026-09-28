@@ -464,7 +464,7 @@
             },
             "worker": {
               "type": "integer",
-              "default": 4
+              "default": 1
             }
           }
         },

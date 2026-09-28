@@ -278,11 +278,11 @@ upstream and can be restored to the client registry on request.
 | backend.secretKeyAlgorithm | string | `HS256` | Algorithm Type used to issue JWT |
 | backend.api.port | int | `3080` | Backend API exposed Port |
 | backend.api.host | string | `0.0.0.0` | Ip address Backend is exposed to |
-| backend.api.worker | int | `4` | Number of process bootstrapped  |
+| backend.api.worker | int | `1` | Number of API processes. Keep at 1: the workers' gRPC registry lives in the API process, extra processes answer 503 "No worker available" (qalita/platform#189; the backend ignores any other value since that fix) |
 | backend.image.repository | string | `ghcr.io/qalita/platform-backend` | QALITA Backend Image Repository |
 | backend.image.tag | string | `3.0.0` | QALITA Backend Image Tag |
 | backend.image.pullPolicy | string | `Always` | QALITA Backend Image Pull Policy |
-| backend.replicaCount | int | `1` | QALITA Backend Replica Count |
+| backend.replicaCount | int | `1` | QALITA Backend Replica Count. Keep at 1, for the same reason as `backend.api.worker` |
 | backend.service.type | string | `ClusterIP` | QALITA Backend Service Type |
 | backend.service.targetPort | int | `3000` | QALITA Backend Service Port |
 | backend.service.protocol | string | `TCP` | QALITA Backend Service Protocol |

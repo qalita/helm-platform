@@ -142,7 +142,11 @@ backend:
   api:
     port: "3080"
     host: "0.0.0.0"
-    worker: 4
+    # Keep at 1. The gRPC server the workers connect to runs inside the API
+    # process, with the registry of their streams: every extra process
+    # answers the requests that need a worker with 503 "No worker available"
+    # (qalita/platform#189). The backend ignores any other value since that fix.
+    worker: 1
     timeout: 120
 
   service:
