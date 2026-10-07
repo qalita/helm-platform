@@ -364,6 +364,15 @@ seaweedfs:
   # `spec.selector` d'un StatefulSet étant immuable, l'upgrade échoue.
   fullnameOverride: "seaweedfs"
 
+  # Binaire en 4.48 sur le chart 4.41.0 (sans tag, l'image suit l'appVersion
+  # du chart, 4.41). Correctif seaweedfs#10900 (4.45) : en 4.41, un client qui
+  # se reconnecte au master avant la fin de l'ancien flux KeepConnected fait
+  # boucler `stream.Send(nil)` à pleine vitesse. Incident qalita-platform-dev
+  # du 2026-10-01 : master ~1,8 cœur, s3 ~1,5, filer bridé à 200m, pendant six
+  # jours, après une micro-coupure réseau.
+  image:
+    tag: "4.48"
+
   global:
     createClusterRole: true
     serviceAccountName: "seaweedfs"
