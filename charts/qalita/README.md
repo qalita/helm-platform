@@ -8,6 +8,43 @@ This chart deploys QALITA Platform on a Kubernetes cluster using the Helm packag
 
 # Quick Start
 
+## To chart 3.2.5 — platform 3.2.1
+
+Platform 3.2.1 is a security release. The image defaults move to it:
+`backend.image.tag` and `frontend.image.tag` to `3.2.1`, `worker.image.tag` to
+`cli` `3.2.1`, and `doc.image.tag` to `3.2.2`; `appVersion` follows. If you pin
+the images in your own `values.yaml`, move the four tags there.
+
+Before you upgrade, list the self-hosted AI endpoints and MCP servers your
+teams use on loopback, private or cluster addresses (Ollama, vLLM, an internal
+LLM gateway, an MCP server in the cluster). The backend now refuses them unless
+they are in `QALITA_OUTBOUND_ALLOWED_HOSTS`, a comma-separated list of hosts,
+`host:port`, `*.domain`, IP addresses or CIDR ranges. The host and port of
+`LLM_ENDPOINT_URL` are allowed without being listed. The chart has no dedicated
+value for it yet, so pass it through `backend.deployment.extraEnv`:
+
+```yaml
+backend:
+  deployment:
+    extraEnv:
+      - name: QALITA_OUTBOUND_ALLOWED_HOSTS
+        value: "ollama.ai.svc.cluster.local:11434,10.20.0.0/16"
+```
+
+Earlier versions returned stored AI and MCP keys through the API. After the
+upgrade, rotate `LLM_API_KEY` and the keys of the team AI configurations and
+MCP servers. Global AI configurations, including the one built from the `LLM_*`
+variables, become read-only in the interface: change them through the
+variables and a backend restart.
+
+The backend applies one database migration when it starts: a nullable
+`uploader_id` column on `assets`, with no rewrite and no backfill. The table is
+locked only while the column and its foreign key are added.
+
+To roll back, downgrade the schema first, from a 3.2.1 backend pod (`alembic
+-c /app/alembic/alembic.ini downgrade r20261023_job_outputs`), then pin the
+3.2.0 tags.
+
 ## To chart 3.2.4 — platform 3.2.0
 
 The image defaults move to the 3.2.0 platform: `backend.image.tag` and
@@ -278,7 +315,7 @@ upstream and can be restored to the client registry on request.
 | frontend.webPackPolling | bool | `false` | Prevent webpack to update its compiled content, used only in dev mode |
 | frontend.mode | string | `production` | The running mode of the platform, can be <DEV/PROD/DEMO> |
 | frontend.image.repository | string | `ghcr.io/qalita/platform-frontend` | QALITA Frontend Image Repository |
-| frontend.image.tag | string | `3.2.0` | QALITA Frontend Image Tag |
+| frontend.image.tag | string | `3.2.1` | QALITA Frontend Image Tag |
 | frontend.image.pullPolicy | string | `Always` | QALITA Frontend Image Pull Policy |
 | frontend.replicaCount | int | `1` | QALITA Frontend Replica Count |
 | frontend.service.type | string | `ClusterIP` | QALITA Frontend Service Type |
@@ -310,7 +347,7 @@ upstream and can be restored to the client registry on request.
 | backend.api.host | string | `0.0.0.0` | Ip address Backend is exposed to |
 | backend.api.worker | int | `1` | Number of API processes. Keep at 1: the workers' gRPC registry lives in the API process, extra processes answer 503 "No worker available" (qalita/platform#189; the backend ignores any other value since that fix) |
 | backend.image.repository | string | `ghcr.io/qalita/platform-backend` | QALITA Backend Image Repository |
-| backend.image.tag | string | `3.2.0` | QALITA Backend Image Tag |
+| backend.image.tag | string | `3.2.1` | QALITA Backend Image Tag |
 | backend.image.pullPolicy | string | `Always` | QALITA Backend Image Pull Policy |
 | backend.replicaCount | int | `1` | QALITA Backend Replica Count. Keep at 1, for the same reason as `backend.api.worker` |
 | backend.service.type | string | `ClusterIP` | QALITA Backend Service Type |
@@ -348,7 +385,7 @@ upstream and can be restored to the client registry on request.
 | worker.mode | string | `worker` | Qalita Worker mode <job/worker> |
 | worker.token | string | `changeme` | Qalita Worker API Token |
 | worker.image.repository | string | `ghcr.io/qalita/cli` | QALITA Worker image (GitHub Container Registry) |
-| worker.image.tag | string | `3.2.0` | QALITA Worker Image Tag |
+| worker.image.tag | string | `3.2.1` | QALITA Worker Image Tag |
 | worker.image.pullPolicy | string | `IfNotPresent` | QALITA Worker Image Pull Policy |
 | worker.replicaCount | int | `1` | QALITA Worker Replica Count |
 | worker.deployment.extraEnv | list | `[]` | QALITA Worker Deployment Environment Variables, format : `- name: QALITA_ENV value: "PROD"` |
@@ -363,7 +400,7 @@ upstream and can be restored to the client registry on request.
 |-----|------|---------|-------------|
 | doc.enabled | bool | `true` | Enabling doc deployment |
 | doc.image.repository | string | `ghcr.io/qalita/documentation` | QALITA Doc Image Repository |
-| doc.image.tag | string | `3.2.1` | QALITA Doc Image Tag |
+| doc.image.tag | string | `3.2.2` | QALITA Doc Image Tag |
 | doc.image.pullPolicy | string | `Always` | QALITA Doc Image Pull Policy |
 | doc.replicaCount | int | `1` | QALITA Doc Replica Count |
 | doc.service.type | string | `ClusterIP` | QALITA Doc Service Type |
